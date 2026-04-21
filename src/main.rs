@@ -35,26 +35,26 @@ fn main() -> anyhow::Result<()> {
 
         match parts.as_slice() {
             ["p"] => {
-                pipeline.pause(); // Utilise le Pipeline pour mettre en pause
+                let _ = output_audio.pause(); // Utilise output_audio !
                 println!("Musique mise en pause.");
             },
             ["l"] => {
-                pipeline.play(); // Reprend la lecture via le Pipeline
+                let _ = output_audio.replay(); // Utilise output_audio !
                 println!("Reprise de la lecture.");
             },
             ["s"] => {
-                pipeline.stop(); // Arrête et remet l'index à zéro
-                println!("Lecture arrêtée.");
+                let _ = output_audio.stop(); // C'est ICI que dec.reset() va s'exécuter !
+                println!("Lecture arrêtée (retour au début).");
             },
             ["v", val] => {
                 if let Ok(v) = val.parse::<f32>() {
-                    pipeline.set_volume(v); // Change le volume dynamiquement
+                    output_audio.set_volume(v); // Utilise output_audio !
                     println!("Volume réglé à {}%", v * 100.0);
                 }
             },
             ["q"] => {
                 println!("Fermeture du lecteur.");
-                break; // Sort de la boucle et termine le programme
+                break;
             },
             _ => println!("Commande inconnue. Utilisez p, l, s, v <valeur> ou q."),
         }

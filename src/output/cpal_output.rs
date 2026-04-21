@@ -45,7 +45,6 @@ impl Output for CpalOutput {
     /// Cette méthode crée un thread de rappel (callback) audio qui consulte 
     /// le pipeline à chaque cycle pour ajuster le volume ou mettre en pause.
     fn play(&mut self, samples: Vec<f32>) -> Result<(), String> {
-        let samples = Arc::new(samples);
         
         let pipeline = Arc::clone(&self.pipeline);
         let decoder = self.decoder.as_ref().ok_or("decoder non initialisé")?.clone();
@@ -83,7 +82,9 @@ impl Output for CpalOutput {
                         } else {
                             *output_sample = 0.0;
                             if state == PlayerState::Stopped {
-                                chunk_index = 0; // Reset si stop
+                                chunk_index = 0; 
+                                current_chunk.clear(); 
+                                
                             }
                         }
                     }
@@ -113,6 +114,12 @@ impl Output for CpalOutput {
     /// Arrête la lecture et réinitialise la position via le pipeline.
     fn stop(&mut self) -> Result<(), String> {
         self.pipeline.stop();
+        // 2. Réinitialiser le décodeur physiquement ici (thread principal, pas audio)
+        if let Some(ref decoder_arc) = self.decoder {
+            if let Ok(mut dec) = decoder_arc.lock() {
+                dec.reset().map_err(|e| e.to_string())?;
+            }
+        }
         Ok(())
     }
 

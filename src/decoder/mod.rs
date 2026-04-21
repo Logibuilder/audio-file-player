@@ -8,6 +8,8 @@ use symphonia::core::{
     probe::Hint,
 };
 use std::fs::File;
+use symphonia::core::{units::Time, formats::{SeekTo, SeekMode}};
+
 
 pub struct Decoder {
     format: Box<dyn symphonia::core::formats::FormatReader>,
@@ -69,6 +71,20 @@ impl Decoder {
 
     pub fn channels(&self) -> u16 {
         self.channels
+    }
+
+    pub fn reset(&mut self) -> Result<()> {
+        let seek_to = SeekTo::Time {
+            time: Time::new(0, 0.0),
+            track_id: None, 
+        };
+        
+        self.format.seek(SeekMode::Accurate, seek_to)
+            .map_err(|e| anyhow!("Erreur lors du retour au début : {}", e))?;
+            
+        // Très important : vider les buffers internes du décodeur
+        self.decoder.reset();
+        Ok(())
     }
 
 }
