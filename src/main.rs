@@ -1,48 +1,31 @@
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+mod decoder;
+mod output; // Importe le dossier output
 
-fn main() {
-    // 1. Lire un fichier WAV
-    let mut reader = hound::WavReader::open("src/test.wav").unwrap();
-    let samples: Vec<f32> = reader
-        .samples::<i16>()
-        .map(|s| s.unwrap() as f32 / i16::MAX as f32)
-        .collect();
+use decoder::Decoder;
+use output::cpal_output::CpalOutput; // Importe ta structure
+use output::output::Output;        // Importe le Trait pour pouvoir utiliser .play()
 
-    let mut sample_index = 0;
+fn main() -> anyhow::Result<()> {
 
-    // 2. Setup CPAL
-    let host = cpal::default_host();
-    let device = host.default_output_device().unwrap();
-    let config = device.default_output_config().unwrap();
 
-    let err_fn = |err| eprintln!("Erreur : {}", err);
-
-    let stream = match config.sample_format() {
-        cpal::SampleFormat::F32 => {
-            let config: cpal::StreamConfig = config.into();
-            device.build_output_stream(
-                &config,
-                move |data: &mut [f32], _| {
-                    for sample in data.iter_mut() {
-                        if sample_index < samples.len() {
-                            *sample = samples[sample_index];
-                            sample_index += 1;
-                        } else {
-                            *sample = 0.0;
-                        }
-                    }
-                },
-                err_fn,
-                None,
-            )
-        }
-        _ => panic!("Format non supporté"),
+    let mut decoder = Decoder::open("src/assets/test.wav")?;
+    
+    let mut musik = Vec::new();
+    while let Some(mut morceau) = decoder.next_chunk() {
+        musik.append(&mut morceau);
     }
-    .unwrap();
+    println!("Fichier décodé : {} échantillons prêts.", musik.len());
 
-    stream.play().unwrap();
+    
+    let mut output_audio = CpalOutput::new();
 
-    println!("Lecture en cours...");
+    
+    output_audio.play(musik).map_err(|e| anyhow::anyhow!(e))?;
 
-    std::thread::sleep(std::time::Duration::from_secs(5));
+    println!("Lecture en cours... Appuyez sur Entrée pour arrêter.");
+    
+    let mut pause_input = String::new();
+    std::io::stdin().read_line(&mut pause_input)?;
+
+    Ok(())
 }

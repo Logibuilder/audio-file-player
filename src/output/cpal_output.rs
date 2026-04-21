@@ -29,13 +29,24 @@ impl Output for CpalOutput {
     fn play(&mut self, samples: Vec<f32>) -> Result<(), String> {
         let volume = self.volume;
         let samples = Arc::new(samples);
+        
+        // On crée un compteur partagé qui survit entre chaque appel de la carte son
+        let mut index = 0; 
 
         let stream = self.device.build_output_stream(
             &self.config,
             {
                 let samples = Arc::clone(&samples);
                 move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-                    play_sample(data, &samples, volume);
+                    // On remplit le tampon de la carte son
+                    for output_sample in data.iter_mut() {
+                        if index < samples.len() {
+                            *output_sample = samples[index] * volume;
+                            index += 1;
+                        } else {
+                            *output_sample = 0.0; // Silence si on a fini
+                        }
+                    }
                 }
             },
             move |err| eprintln!("Stream error: {:?}", err),
@@ -43,7 +54,7 @@ impl Output for CpalOutput {
         ).map_err(|e| e.to_string())?;
 
         stream.play().map_err(|e| e.to_string())?;
-        self.stream = Some(stream);
+        self.stream = Some(stream); // On garde le stream en vie
         Ok(())
     }
 
