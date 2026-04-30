@@ -1,6 +1,9 @@
 use cpal::traits::HostTrait;
 
-
+/// Le trait `Output` définit l'interface standard pour tous les moteurs de sortie audio
+/// de l'application.
+///
+/// Il permet d'abstraire la logique de manipulation du flux audio (lecture, pause, volume) ici CPAL
 pub trait Output {
         
     /// jouer les échantillons audio

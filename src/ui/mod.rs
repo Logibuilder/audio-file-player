@@ -1,12 +1,26 @@
+/// Module gérant l'interface utilisateur en mode ligne de commande (CLI).
+
 use crate::output::output::Output;
 use std::io::{self, Write};
 
+
+/// Affiche la liste des commandes disponibles sur la sortie standard.
 pub fn print_help() {
     println!("\n--- Commandes du Lecteur ---");
     println!("[p] Pause | [l] Lecture | [s] Stop | [v] Volume (ex: v 0.5) | [q] Quitter");
 }
 
 
+/// Lance la boucle principale d'écoute du clavier.
+/// 
+/// Cette fonction est générique sur le type `T`, permettant d'accepter 
+/// n'importe quelle sortie implémentant le trait [`Output`].
+/// 
+/// # Arguments
+/// * `output_audio` - Une instance de sortie audio (ex: `CpalOutput`).
+/// 
+/// # Erreurs
+/// Retourne une erreur si la lecture de l'entrée standard échoue.
 pub fn run_cli<T : Output>(mut output_audio : T) -> anyhow::Result<()> {
     print_help();
 

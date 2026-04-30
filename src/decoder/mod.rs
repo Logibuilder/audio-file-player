@@ -11,6 +11,7 @@ use std::fs::File;
 use symphonia::core::{units::Time, formats::{SeekTo, SeekMode}};
 
 
+/// Gère l'ouverture et le décodage des fichiers audio via `symphonia`.
 pub struct Decoder {
     format: Box<dyn symphonia::core::formats::FormatReader>,
     decoder: Box<dyn symphonia::core::codecs::Decoder>,
@@ -20,6 +21,8 @@ pub struct Decoder {
 
 
 impl Decoder {
+
+    /// Ouvre un fichier audio à partir d'un chemin et initialise le décodeur approprié.
     pub fn open(path: &str) -> Result<Self> {
 
         let src = File::open(path)?;
@@ -47,6 +50,9 @@ impl Decoder {
 
     }
 
+
+    /// Lit le prochain paquet audio et le convertit en échantillons de type `f32` entrelacés.
+    /// Retourne `None` si la fin du fichier est atteinte.
     pub fn next_chunk(&mut self) -> Option<Vec<f32>> {
 
 
@@ -73,6 +79,8 @@ impl Decoder {
         self.channels
     }
 
+
+    /// Réinitialise la position du décodeur au début du fichier (0s).
     pub fn reset(&mut self) -> Result<()> {
         let seek_to = SeekTo::Time {
             time: Time::new(0, 0.0),

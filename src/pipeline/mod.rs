@@ -17,8 +17,11 @@ pub enum PlayerCommand {
 /// Représente les différents états possibles du lecteur audio.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum PlayerState {
+    /// Le son est en cours de diffusion.
     Playing,
+    /// La lecture est suspendue, le curseur temporel est maintenu.
     Paused,
+    /// La lecture est arrêtée, le curseur est remis à zéro.
     Stopped,
 }
 
