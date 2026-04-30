@@ -1,28 +1,19 @@
-use audio_file_player::output::cpal_output::CpalOutput;
-use audio_file_player::output::output::Output;
-
-use std::thread;
-use std::time::Duration;
+use audio_file_player::{
+    output::{cpal_output::CpalOutput, output::Output},
+    pipeline::Pipeline,
+};
+use std::sync::Arc;
 
 #[test]
-fn test_play_sine_wave() {
-    let mut player = CpalOutput::new();
+fn no_stream_before_play() {
+    let pipeline = Arc::new(Pipeline::new());
+    let output = CpalOutput::new(Arc::clone(&pipeline));
+    assert!(output.stream.is_none());
+}
 
-    /// crer une onde sinusoïdale de 440 Hz pendant 1 seconde
-    let sample_rate = player.config.sample_rate as f32;
-    let freq = 440.0; 
-    let duration_sec = 1.0;
-    let num_samples = (sample_rate * duration_sec) as usize;
-
-    let samples: Vec<f32> = (0..num_samples)
-        .map(|i| (2.0 * std::f32::consts::PI * freq * (i as f32 / sample_rate)).sin() * 0.5)
-        .collect();
-
-    player.play(samples).unwrap();
-
-    // laisser le son jouer
-    thread::sleep(Duration::from_secs_f32(duration_sec + 0.2));
-
-    /// vérifier que le flux est actif
-    assert!(player.stream.is_some());
+#[test]
+fn play_without_decoder_fails_cleanly() {
+    let pipeline = Arc::new(Pipeline::new());
+    let mut player = CpalOutput::new(Arc::clone(&pipeline));
+    assert!(player.play(vec![]).is_err());
 }
